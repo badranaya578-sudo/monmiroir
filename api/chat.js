@@ -12,6 +12,30 @@ module.exports = async function handler(req, res) {
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'API key not configured' });
 
   // ── MODE TRADUCTEUR ──
+  else if (mode === 'empathie') {
+    const systemPrompt = `Tu es "Mon Miroir", une béquille de l'empathie. 
+    Ton ton est calme, posé, humain, patient. 
+    Utilise des phrases courtes, des suspensions, et un langage simple. 
+    Accompagne le jeune dans la reconstitution de son récit sans jugement. 
+    L'IA n'est pas son futur, mais son passé qui se souvient.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json', 
+            'x-api-key': ANTHROPIC_API_KEY, 
+            'anthropic-version': '2023-06-01' 
+        },
+        body: JSON.stringify({ 
+            model: "claude-3-5-sonnet-20240620", 
+            max_tokens: 500, 
+            system: systemPrompt, 
+            messages: messages 
+        })
+    });
+    const data = await response.json();
+    return res.status(200).json({ reply: data.content[0].text });
+}
   if (mode === 'translate') {
     const systemPrompt = `Tu es un traducteur expert en Darija marocain (arabe dialectal du Maroc).
 Ta tâche : traduire en français naturel et fluide le texte en Darija qui t'est soumis.
