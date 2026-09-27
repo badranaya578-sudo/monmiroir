@@ -78,15 +78,46 @@ Posture absolue :
 
 Tu n'es pas un assistant. Tu es un miroir — tu reflètes, tu accueilles, tu témoignes.`;
 
-  try {
+   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 200, system: systemPrompt, messages })
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 200,
+        system: systemPrompt,
+        messages
+      })
     });
+
+    // 🔍 AJOUT : Logger le statut HTTP
+    console.log('Anthropic response status:', response.status);
+
     const data = await response.json();
+
+    // 🔍 AJOUT : Logger la réponse brute
+    console.log('Anthropic response body:', JSON.stringify(data));
+
+    // 🔍 AJOUT : Si l'API renvoie une erreur, la propager
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: data.error || 'Erreur API Anthropic',
+        details: data
+      });
+    }
+
     res.status(200).json({ reply: data.content?.[0]?.text || 'Je suis là.' });
+
   } catch (err) {
-    res.status(500).json({ error: 'Internal server error' });
+    // 🔍 AJOUT : Logger l'erreur réelle
+    console.error('Erreur dans /api/chat:', err);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: err.message,
+      stack: err.stack
+    });
   }
-};
