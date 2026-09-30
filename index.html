@@ -204,6 +204,7 @@
 
   // ── CHOIX LANGUE ──
   function chooseLang(btn) {
+    document.getElementById('chatApp').classList.add('visible');
     selectedLang = btn.dataset.lang;
     currentVoiceId = (selectedLang === 'fr') ? VOICE_ID_FR : VOICE_ID_AR;
     var greeting = btn.dataset.greeting;
