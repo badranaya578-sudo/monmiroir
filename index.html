@@ -134,7 +134,40 @@
     <button class="btn-header" id="btnMode">🔤</button>
     <button class="btn-header" id="btnWrite">✏️</button>
   </div>
+<!-- BARRE THÉMATIQUE -->
+<div id="themeBar" style="
+  display:none;
+  background: rgba(26,42,68,0.95);
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+  padding: 8px 16px;
+  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+">
+  <button onclick="sendJudiciaire()" style="
+    background: rgba(229,57,53,0.15);
+    border: 1px solid rgba(229,57,53,0.4);
+    border-radius: 20px;
+    padding: 7px 16px;
+    color: #E07B7B;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: Nunito, sans-serif;
+  ">⚖️ Judiciaire</button>
 
+  <button onclick="sendInsertion()" style="
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 20px;
+    padding: 7px 16px;
+    color: var(--gold);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: Nunito, sans-serif;
+  ">💼 Insertion</button>
+</div>
   <div class="trad-banner" id="tradBanner">MODE TRADUCTEUR — Darija → Français</div>
 
   <div class="chat-zone" id="chatZone"></div>
