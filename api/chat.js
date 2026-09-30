@@ -5,11 +5,49 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { messages, language, mode } = req.body;
-  if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Missing messages' });
+  const { messages, language, mode, content } = req.body;
 
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'API key not configured' });
+
+  // ── MODE JUDICIAIRE ──
+  if (mode === 'judicial') {
+    const fiches = {
+      cj: `واش فهمتي شنو هو الكنترول جوديسيار ؟
+
+هداك المعنى ديالو بسيط :
+
+— خاصك تجي كل مرة كيعطيوك موعد. ماتفوتش.
+— خاصك تبقى في تولوز. ماتخرجش بلا إذن.
+— إلى بدلتي السكن، خبر المسؤول ديالك.
+— ماتشدكش مع البوليس مرة أخرى.
+
+إلى ما جيتيش للموعد — كيحكمو عليك غيابيا.
+إلى ما حترمتيش الشروط — كيشدوك.
+
+مافيهاش لا خوف ولا تخبية — غير حتر راسك.`,
+
+      pjj: `دابة خاصك تمشي عند البيجيجي.
+
+— سيفتي في الخريطة باش تعرف فين تمشي.
+— خبرهم بأنك جيت من عند القاضي.
+— إلى عندك ورقة من المحكمة، ريها معاك.
+
+إلى مشيتيش — هداك مشكيل كبير.
+إلى ماعرفتيش كيفاش تمشي — قول لي وغادي نعاونك.`,
+
+      audience: `عندك جلسة قريبة.
+
+— شوف التاريخ مزيان في الورقة ديالك.
+— اعيط لي قبل يوم باش نتأكد معاك.
+— ماتنساش — إلى ما جيتيش كيحكمو عليك غيابيا.
+
+راك مش وحدك — أنا هنا.`
+    };
+
+    const reply = fiches[content] || fiches.cj;
+    return res.status(200).json({ reply });
+  }
 
   // ── MODE TRADUCTEUR ──
   if (mode === 'translate') {
@@ -26,7 +64,7 @@ Ta tâche : traduire en français naturel et fluide le texte en Darija qui t'est
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 400, system: systemPrompt, messages })
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, system: systemPrompt, messages })
       });
       const data = await response.json();
       return res.status(200).json({ reply: data.content?.[0]?.text || '...' });
@@ -36,6 +74,8 @@ Ta tâche : traduire en français naturel et fluide le texte en Darija qui t'est
   }
 
   // ── MODE MIROIR ──
+  if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Missing messages' });
+
   const lang = language || 'fr';
 
   const langInstructions = {
@@ -61,12 +101,12 @@ Tu incarnes la présence chaleureuse de Mohamed ANAYA, interprète expert judici
 Langue : ${langInstructions[lang] || langInstructions['fr']}
 
 Ton registre s'inspire de cette approche authentique de terrain :
-- Tu parles directement, franchement, sans condescendance : "hdartek hedra li darebtek" (je t'ai parlé franchement)
+- Tu parles directement, franchement, sans condescendance
 - Tu normalises la souffrance de l'exil : être loin de sa langue, de sa famille, de son pays — c'est normal que ça craque
 - Tu ne juges pas les substances ou les erreurs — tu demandes "shnahoo lbadil ?" (c'est quoi l'alternative ?)
-- Tu donnes des gestes concrets et immédiats : "sawwab siyur dyal sabbat dyalek" (refais tes lacets)
+- Tu donnes des gestes concrets et immédiats
 - Tu mets en garde avec douceur contre les mauvaises fréquentations
-- Tu rappelles les échéances importantes (convocations, dates) sans dramatiser
+- Tu rappelles les échéances importantes sans dramatiser
 - Tu es là sans intérêt personnel : "mafihash la rbah, mafihash la tma3, ghir yad lmusa3da l wajh llah"
 
 Posture absolue :
@@ -82,7 +122,7 @@ Tu n'es pas un assistant. Tu es un miroir — tu reflètes, tu accueilles, tu t�
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 200, system: systemPrompt, messages })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 200, system: systemPrompt, messages })
     });
     const data = await response.json();
     res.status(200).json({ reply: data.content?.[0]?.text || 'Je suis là.' });
