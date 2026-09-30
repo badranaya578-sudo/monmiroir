@@ -294,6 +294,22 @@
 
   // ── MODE TRADUCTEUR ──
   function toggleMode() {
+    function sendJudiciaire() {
+  fetch('https://monmiroir.vercel.app/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [], mode: 'judicial', content: 'cj', language: selectedLang })
+  })
+  .then(r => r.json())
+  .then(data => {
+    addMirrorBubble(data.reply || 'Je suis là.');
+  });
+}
+
+function sendInsertion() {
+  addUserBubble('💼 Insertion');
+  sendToMirror('Je veux travailler. Aide-moi à trouver ma voie.');
+}
     appMode = (appMode === 'mirror') ? 'translator' : 'mirror';
     if (appState === 'listening') stopListening();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
