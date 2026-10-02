@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon Miroir — Traduction</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    body { background: #0F1923; color: #F0EDE6; font-family: 'Nunito', sans-serif; padding: 20px; }
+    h1 { color: #C9A84C; text-align: center; }
+    .bloc { background: #1A3A5C; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+    .titre { color: #C9A84C; font-size: 14px; text-transform: uppercase; margin-bottom: 10px; }
+    .bouton { background: #C9A84C; color: #0F1923; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    .bouton.actif { background: #E53935; color: white; }
+    .zone { background: #0A1520; border-radius: 8px; padding: 15px; margin-top: 10px; min-height: 50px; }
+    .darija { font-family: 'Tajawal', sans-serif; direction: rtl; text-align: right; }
+  </style>
+</head>
+<body>
+
+  <h1>Mon Miroir — Traduction</h1>
+
+  <div class="bloc">
+    <div class="titre">🎤 Éducateur — Français</div>
+    <button class="bouton" id="btnFr">Démarrer l'écoute</button>
+    <div class="zone" id="transcriptionFr">En attente...</div>
+    <div class="zone darija" id="traductionDarija">الترجمة تظهر هنا</div>
+  </div>
+
+  <div class="bloc">
+    <div class="titre">🎤 Jeune — Darija</div>
+    <button class="bouton" id="btnAr">Démarrer l'écoute</button>
+    <div class="zone darija" id="transcriptionAr">النسخ يظهر هنا</div>
+    <div class="zone" id="traductionFr">La traduction apparaît ici</div>
+  </div>
+
+  <script>
+    const recognitionFr = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognitionFr.lang = 'fr-FR';
+    recognitionFr.continuous = true;
+
+    recognitionFr.onresult = async (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      document.getElementById('transcriptionFr').textContent = transcript;
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'translate-fr', messages: [{ role: 'user', content: transcript }] })
+      });
+      const data = await response.json();
+      document.getElementById('traductionDarija').textContent = data.reply;
+    };
+
+    const recognitionAr = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognitionAr.lang = 'ar-MA';
+    recognitionAr.continuous = true;
+
+    recognitionAr.onresult = async (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      document.getElementById('transcriptionAr').textContent = transcript;
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'translate', messages: [{ role: 'user', content: transcript }] })
+      });
+      const data = await response.json();
+      document.getElementById('traductionFr').textContent = data.reply;
+    };
+
+    document.getElementById('btnFr').onclick = () => {
+      const btn = document.getElementById('btnFr');
+      if (btn.classList.contains('actif')) {
+        recognitionFr.stop();
+        btn.classList.remove('actif');
+        btn.textContent = "Démarrer l'écoute";
+      } else {
+        recognitionFr.start();
+        btn.classList.add('actif');
+        btn.textContent = "Arrêter l'écoute";
+      }
+    };
+
+    document.getElementById('btnAr').onclick = () => {
+      const btn = document.getElementById('btnAr');
+      if (btn.classList.contains('actif')) {
+        recognitionAr.stop();
+        btn.classList.remove('actif');
+        btn.textContent = "Démarrer l'écoute";
+      } else {
+        recognitionAr.start();
+        btn.classList.add('actif');
+        btn.textContent = "Arrêter l'écoute";
+      }
+    };
+  </script>
+
+</body>
+</html>
