@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'API key not configured' });
 
-  // ── MODE TRADUCTEUR ──
+  // ── MODE TRADUCTEUR (Darija → Français) ──
   if (mode === 'translate') {
     const systemPrompt = `Tu es un traducteur expert en Darija marocain (arabe dialectal du Maroc).
 Ta tâche : traduire en français naturel et fluide le texte en Darija qui t'est soumis.
@@ -21,6 +21,36 @@ Ta tâche : traduire en français naturel et fluide le texte en Darija qui t'est
 - Tiens compte du registre oral et familier du Darija
 - Réponds UNIQUEMENT avec la traduction — aucun commentaire, aucune explication
 - Si tu ne comprends pas un mot, laisse-le tel quel entre parenthèses`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 400, system: systemPrompt, messages })
+      });
+      const data = await response.json();
+      return res.status(200).json({ reply: data.content?.[0]?.text || '...' });
+    } catch (err) {
+      return res.status(500).json({ error: 'Translation error' });
+    }
+  }
+
+  // ── MODE TRADUCTEUR (Français → Darija) ──
+  if (mode === 'translate-fr') {
+    const systemPrompt = `Tu es un traducteur expert en Darija marocain (arabe dialectal du Maroc).
+Ta tâche : traduire en Darija marocain authentique le texte en français qui t'est soumis.
+- Conserve le sens exact, les nuances et les expressions idiomatiques
+- Utilise le registre oral et familier du Darija (celui de la rue, du cœur)
+- Si le texte contient des termes techniques (justice, administration), garde-les en français ou explique-les simplement
+- Tiens compte du contexte : le jeune est un MNA au Tribunal pour Enfants de Toulouse
+- Réponds UNIQUEMENT avec la traduction — aucun commentaire, aucune explication
+- Si tu ne comprends pas un mot, laisse-le tel quel entre parenthèses
+
+Exemples de formules utiles :
+- "Tu es en contrôle judiciaire" → "Rak f contrôle judiciaire" ou "Rak taht l-muraqaba"
+- "Tu dois te présenter à la PJJ" → "Khassek tmchi l PJJ"
+- "Si tu rates ce rendez-vous" → "Ila fattek had l-maw3id"
+- "Voilà comment y aller" → "Hadi kifach tmchi temma"`;
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
